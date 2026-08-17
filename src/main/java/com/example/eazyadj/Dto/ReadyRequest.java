@@ -41,7 +41,7 @@ public class ReadyRequest {
             value = "driverId",
             access = JsonProperty.Access.WRITE_ONLY
     )
-    private String driverId;
+    private Long driverId;
 
     public String getCid() {
         return cid;
@@ -131,11 +131,11 @@ public class ReadyRequest {
         this.failUrl = failUrl;
     }
 
-    public String getDriverId() {
+    public Long getDriverId() {
         return driverId;
     }
 
-    public void setDriverId(String driverId) {
+    public void setDriverId(Long driverId) {
         this.driverId = driverId;
     }
 }

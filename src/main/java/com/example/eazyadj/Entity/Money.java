@@ -1,9 +1,9 @@
 package com.example.eazyadj.Entity;
 
-import com.example.eazyadj.Entity.Payment;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "money")
@@ -18,14 +18,20 @@ public class Money {
     @JoinColumn(name = "payment_id")
     private Payment payment;
 
-    @Column(name = "total")
-    private BigDecimal total;
+    @Column(name = "amount")
+    private BigDecimal amount;
 
     @Column(name = "tax_free")
     private BigDecimal taxFree;
 
     @Column(name = "vat")
     private BigDecimal vat;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+
+    @Column(name = "driver_id")
+    private Long driverId;
 
     public Long getPaymentId() {
         return paymentId;
@@ -39,12 +45,12 @@ public class Money {
         this.payment = payment;
     }
 
-    public BigDecimal getTotal() {
-        return total;
+    public BigDecimal getAmount() {
+        return amount;
     }
 
-    public void setTotal(BigDecimal total) {
-        this.total = total;
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
     }
 
     public BigDecimal getTaxFree() {
@@ -61,5 +67,21 @@ public class Money {
 
     public void setVat(BigDecimal vat) {
         this.vat = vat;
+    }
+
+    public LocalDateTime getApprovedAt() {
+        return approvedAt;
+    }
+
+    public void setApprovedAt(LocalDateTime approvedAt) {
+        this.approvedAt = approvedAt;
+    }
+
+    public Long getDriverId() {
+        return driverId;
+    }
+
+    public void setDriverId(Long driverId) {
+        this.driverId = driverId;
     }
 }

@@ -36,7 +36,6 @@ public class Payment {
     @Column(name = "payment_method_type")
     private String paymentMethodType;
 
-
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
 
@@ -54,7 +53,7 @@ public class Payment {
     private String partnerUserId;
 
     @Column(name = "driver_id")
-    private String driverId;
+    private Long driverId;
 
     @Column(
             name = "status",
@@ -132,12 +131,12 @@ public class Payment {
                 partnerUserId;
     }
 
-    public String getDriverId() {
+    public Long getDriverId() {
         return driverId;
     }
 
     public void setDriverId(
-            String driverId
+            Long driverId
     ) {
         this.driverId =
                 driverId;

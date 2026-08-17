@@ -580,7 +580,7 @@ public class PaymentService {
                     .getAmount()
                     .getTotal() != null) {
 
-                money.setTotal(
+                money.setAmount(
                         BigDecimal.valueOf(
                                 response
                                         .getAmount()
@@ -614,6 +614,14 @@ public class PaymentService {
                         )
                 );
             }
+            money.setApprovedAt(
+                    response.getApprovedAt()
+            );
+
+
+            money.setDriverId(
+                    payment.getDriverId()
+            );
 
             payment.setMoney(
                     money
