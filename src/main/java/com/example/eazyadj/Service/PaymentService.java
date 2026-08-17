@@ -7,6 +7,7 @@ import com.example.eazyadj.Entity.PaymentAttempt;
 import com.example.eazyadj.Repository.PaymentAttemptRepository;
 import com.example.eazyadj.Repository.PaymentRepository;
 
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 
@@ -88,6 +89,17 @@ public class PaymentService {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT,
                         "이미 완료된 결제입니다. orderId="
+                                + orderId
+                );
+            }
+
+            if ("CANCELLED".equals(
+                    payment.getStatus()
+            )) {
+
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "취소된 결제입니다. orderId="
                                 + orderId
                 );
             }
@@ -277,12 +289,8 @@ public class PaymentService {
                             attempt
                     );
 
-            payment.setStatus(
-                    "READY"
-            );
-
-            paymentRepository.save(
-                    payment
+            paymentRepository.changeCreatedToReady(
+                    payment.getPaymentId()
             );
 
             return response;
@@ -353,6 +361,16 @@ public class PaymentService {
             );
         }
 
+        if ("CANCELLED".equals(
+                payment.getStatus()
+        )) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "취소된 결제입니다."
+            );
+        }
+
         if (!"READY".equals(
                 attempt.getStatus()
         )) {
@@ -386,6 +404,16 @@ public class PaymentService {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT,
                         "이미 완료된 결제입니다."
+                );
+            }
+
+            if ("CANCELLED".equals(
+                    latestPayment.getStatus()
+            )) {
+
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "취소된 결제입니다."
                 );
             }
 
@@ -546,6 +574,107 @@ public class PaymentService {
 
         return response;
     }
+
+    @Transactional
+    public void cancelPayment(
+            String orderId
+    ) {
+
+        Payment payment =
+                paymentRepository
+                        .findByPartnerOrderId(
+                                orderId
+                        )
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND,
+                                                "결제 정보를 찾을 수 없습니다."
+                                        )
+                        );
+
+        if ("APPROVED".equals(
+                payment.getStatus()
+        )) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "이미 완료된 결제입니다."
+            );
+        }
+
+        if ("CANCELLED".equals(
+                payment.getStatus()
+        )) {
+
+            return;
+        }
+
+        int updated =
+                paymentRepository
+                        .changeToCancelled(
+                                payment.getPaymentId()
+                        );
+
+        if (updated == 0) {
+
+            Payment latest =
+                    paymentRepository
+                            .findById(
+                                    payment.getPaymentId()
+                            )
+                            .orElseThrow();
+
+            if ("APPROVED".equals(
+                    latest.getStatus()
+            )) {
+
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "이미 완료된 결제입니다."
+                );
+            }
+
+            if ("APPROVING".equals(
+                    latest.getStatus()
+            )) {
+
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "현재 결제 승인 처리 중이므로 취소할 수 없습니다."
+                );
+            }
+
+            if ("CANCELLED".equals(
+                    latest.getStatus()
+            )) {
+
+                return;
+            }
+
+            if ("APPROVE_UNKNOWN".equals(
+                    latest.getStatus()
+            )) {
+
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "결제 승인 결과 확인이 필요한 상태이므로 취소할 수 없습니다."
+                );
+            }
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "현재 취소할 수 없는 결제 상태입니다. status="
+                            + latest.getStatus()
+            );
+        }
+
+        paymentAttemptRepository
+                .invalidateAllAttempts(
+                        payment.getPaymentId()
+                );
+    }
+
 
     private void saveApprovedPayment(
 

@@ -192,6 +192,59 @@ public class PaymentController {
         }
     }
 
+    @PostMapping(
+            value = "/{orderId}/cancel",
+            produces = MediaType.TEXT_HTML_VALUE
+    )
+    public ResponseEntity<String> cancelPayment(
+
+            @PathVariable("orderId")
+            String orderId
+
+    ) {
+
+        paymentService.cancelPayment(
+                orderId
+        );
+
+
+        String html = """
+            <!DOCTYPE html>
+            <html lang="ko">
+
+            <head>
+                <meta charset="UTF-8">
+                <title>결제 취소</title>
+            </head>
+
+            <body style="
+                font-family: Arial, sans-serif;
+                text-align: center;
+                margin-top: 120px;
+            ">
+
+                <h2>결제가 취소되었습니다.</h2>
+
+                <p>
+                    해당 결제는 더 이상 진행할 수 없습니다.
+                </p>
+
+            </body>
+
+            </html>
+            """;
+
+
+        return ResponseEntity
+                .ok()
+                .contentType(
+                        MediaType.TEXT_HTML
+                )
+                .body(
+                        html
+                );
+    }
+
     @GetMapping("/cancel")
     public String cancel() {
 

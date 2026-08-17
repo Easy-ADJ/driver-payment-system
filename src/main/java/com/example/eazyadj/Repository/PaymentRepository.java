@@ -45,6 +45,38 @@ public interface PaymentRepository
     )
     @Query("""
             UPDATE Payment p
+               SET p.status = 'CANCELLED'
+             WHERE p.paymentId = :paymentId
+               AND p.status IN ('CREATED', 'READY')
+            """)
+    int changeToCancelled(
+            @Param("paymentId")
+            Long paymentId
+    );
+
+    @Transactional
+    @Modifying(
+            clearAutomatically = true,
+            flushAutomatically = true
+    )
+    @Query("""
+            UPDATE Payment p
+               SET p.status = 'READY'
+             WHERE p.paymentId = :paymentId
+               AND p.status = 'CREATED'
+            """)
+    int changeCreatedToReady(
+            @Param("paymentId")
+            Long paymentId
+    );
+
+    @Transactional
+    @Modifying(
+            clearAutomatically = true,
+            flushAutomatically = true
+    )
+    @Query("""
+            UPDATE Payment p
                SET p.status = :status
              WHERE p.paymentId = :paymentId
             """)
@@ -55,4 +87,5 @@ public interface PaymentRepository
             @Param("status")
             String status
     );
+
 }
