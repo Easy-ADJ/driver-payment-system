@@ -6,12 +6,12 @@ import java.time.LocalDateTime;
 public class LedgerResponse {
 
     private Long paymentId;
-    private BigDecimal amount;
+    private Integer amount;
     private LocalDateTime approvedAt;
 
     public LedgerResponse(
             Long paymentId,
-            BigDecimal amount,
+            Integer amount,
             LocalDateTime approvedAt
     ) {
         this.paymentId = paymentId;
@@ -23,7 +23,7 @@ public class LedgerResponse {
         return paymentId;
     }
 
-    public BigDecimal getAmount() {
+    public Integer getAmount() {
         return amount;
     }
 

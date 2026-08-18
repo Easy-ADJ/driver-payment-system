@@ -1,5 +1,6 @@
 package com.example.eazyadj.Entity;
 
+import io.netty.util.internal.IntegerHolder;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -19,13 +20,13 @@ public class Money {
     private Payment payment;
 
     @Column(name = "amount")
-    private BigDecimal amount;
+    private Integer amount;
 
     @Column(name = "tax_free")
-    private BigDecimal taxFree;
+    private Integer taxFree;
 
     @Column(name = "vat")
-    private BigDecimal vat;
+    private Integer vat;
 
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
@@ -45,27 +46,27 @@ public class Money {
         this.payment = payment;
     }
 
-    public BigDecimal getAmount() {
+    public Integer getAmount() {
         return amount;
     }
 
-    public void setAmount(BigDecimal amount) {
+    public void setAmount(Integer amount) {
         this.amount = amount;
     }
 
-    public BigDecimal getTaxFree() {
+    public Integer getTaxFree() {
         return taxFree;
     }
 
-    public void setTaxFree(BigDecimal taxFree) {
+    public void setTaxFree(Integer taxFree) {
         this.taxFree = taxFree;
     }
 
-    public BigDecimal getVat() {
+    public Integer getVat() {
         return vat;
     }
 
-    public void setVat(BigDecimal vat) {
+    public void setVat(Integer vat) {
         this.vat = vat;
     }
 

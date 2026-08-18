@@ -710,11 +710,9 @@ public class PaymentService {
                     .getTotal() != null) {
 
                 money.setAmount(
-                        BigDecimal.valueOf(
-                                response
-                                        .getAmount()
-                                        .getTotal()
-                        )
+                        response
+                                .getAmount()
+                                .getTotal()
                 );
             }
 
@@ -723,11 +721,9 @@ public class PaymentService {
                     .getTaxFree() != null) {
 
                 money.setTaxFree(
-                        BigDecimal.valueOf(
-                                response
-                                        .getAmount()
-                                        .getTaxFree()
-                        )
+                        response
+                                .getAmount()
+                                .getTaxFree()
                 );
             }
 
@@ -736,11 +732,9 @@ public class PaymentService {
                     .getVat() != null) {
 
                 money.setVat(
-                        BigDecimal.valueOf(
-                                response
-                                        .getAmount()
-                                        .getVat()
-                        )
+                        response
+                                .getAmount()
+                                .getVat()
                 );
             }
             money.setApprovedAt(
