@@ -1,5 +1,6 @@
 package com.example.eazyadj.Repository;
 
+import com.example.eazyadj.Entity.Payment;
 import com.example.eazyadj.Entity.PaymentAttempt;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,6 +17,11 @@ public interface PaymentAttemptRepository
 
     Optional<PaymentAttempt> findByAttemptKey(
             String attemptKey
+    );
+
+    Optional<PaymentAttempt>
+    findTopByPaymentOrderByCreatedAtDesc(
+            Payment payment
     );
 
     Optional<PaymentAttempt> findByTid(

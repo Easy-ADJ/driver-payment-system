@@ -27,7 +27,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-
 @Service
 public class PaymentService {
 
@@ -38,14 +37,14 @@ public class PaymentService {
 
     private final RestClient restClient;
 
-
     @Value("${payment.kakao.secret-key}")
     private String secretKey;
-
 
     @Value("${payment.kakao.cid}")
     private String cid;
 
+    @Value("${payment.callback-base-url}")
+    private String callbackBaseUrl;
 
     public PaymentService(
             PaymentRepository paymentRepository,
@@ -67,6 +66,348 @@ public class PaymentService {
     }
 
     public ReadyResponse ready(
+            ReadyRequest request
+    ) {
+
+        if (request.getDriverId() == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "driverId는 필수입니다."
+            );
+        }
+
+        if (request.getTotalAmount() == null
+                || request.getTotalAmount() <= 0) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "결제 금액은 0보다 커야 합니다."
+            );
+        }
+
+        if (request.getIdempotencyKey() == null
+                || request.getIdempotencyKey().isBlank()) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "idempotencyKey는 필수입니다."
+            );
+        }
+
+        String idempotencyKey =
+                request.getIdempotencyKey();
+
+        Payment existingPayment =
+                paymentRepository
+                        .findByIdempotencyKey(
+                                idempotencyKey
+                        )
+                        .orElse(null);
+
+        if (existingPayment != null) {
+
+            if ("APPROVED".equals(
+                    existingPayment.getStatus()
+            )) {
+
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "이미 완료된 결제입니다."
+                );
+            }
+
+            if ("CANCELLED".equals(
+                    existingPayment.getStatus()
+            )) {
+
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "이미 취소된 결제입니다."
+                );
+            }
+
+            PaymentAttempt existingAttempt =
+                    paymentAttemptRepository
+                            .findTopByPaymentOrderByCreatedAtDesc(
+                                    existingPayment
+                            )
+                            .orElseThrow(
+                                    () ->
+                                            new ResponseStatusException(
+                                                    HttpStatus.CONFLICT,
+                                                    "기존 결제 시도 정보를 찾을 수 없습니다."
+                                            )
+                            );
+
+            if (existingAttempt.getNextRedirectPcUrl()
+                    == null) {
+
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "기존 결제 URL을 찾을 수 없습니다."
+                );
+            }
+
+            ReadyResponse existingResponse =
+                    new ReadyResponse();
+
+            existingResponse.setTid(
+                    existingAttempt.getTid()
+            );
+
+            existingResponse.setNextRedirectPcUrl(
+                    existingAttempt
+                            .getNextRedirectPcUrl()
+            );
+
+            return existingResponse;
+        }
+
+        Long driverId =
+                request.getDriverId();
+
+        Integer totalAmount =
+                request.getTotalAmount();
+
+        String orderId =
+                "ORDER-" + UUID.randomUUID();
+
+        String partnerUserId =
+                "DRIVER-" + driverId;
+
+        String itemName =
+                "택시 결제";
+
+        int quantity =
+                1;
+
+        int taxFreeAmount =
+                (int) Math.round(
+                        totalAmount * 0.05
+                );
+
+        int vatAmount =
+                (int) Math.round(
+                        totalAmount * 0.03
+                );
+
+        String approvalUrl =
+                callbackBaseUrl
+                        + "/payment/success"
+                        + "?orderId="
+                        + orderId;
+
+        String cancelUrl =
+                callbackBaseUrl
+                        + "/payment/cancel";
+
+        String failUrl =
+                callbackBaseUrl
+                        + "/payment/fail";
+
+        request.setPartnerOrderId(
+                orderId
+        );
+
+        request.setPartnerUserId(
+                partnerUserId
+        );
+
+        request.setItemName(
+                itemName
+        );
+
+        request.setQuantity(
+                quantity
+        );
+
+        request.setTaxFreeAmount(
+                taxFreeAmount
+        );
+
+        request.setVatAmount(
+                vatAmount
+        );
+
+        request.setApprovalUrl(
+                approvalUrl
+        );
+
+        request.setCancelUrl(
+                cancelUrl
+        );
+
+        request.setFailUrl(
+                failUrl
+        );
+
+        request.setCid(
+                cid
+        );
+
+        Payment payment =
+                new Payment();
+
+        payment.setPartnerOrderId(
+                orderId
+        );
+
+        payment.setPartnerUserId(
+                partnerUserId
+        );
+
+        payment.setDriverId(
+                driverId
+        );
+
+        payment.setIdempotencyKey(
+                idempotencyKey
+        );
+
+        payment.setStatus(
+                "CREATED"
+        );
+
+        try {
+
+            paymentRepository
+                    .saveAndFlush(
+                            payment
+                    );
+
+        } catch (
+                DataIntegrityViolationException e
+        ) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "결제 생성 중 충돌이 발생했습니다."
+            );
+        }
+
+        PaymentAttempt attempt =
+                new PaymentAttempt();
+
+        String attemptKey =
+                UUID.randomUUID()
+                        .toString();
+
+        attempt.setPayment(
+                payment
+        );
+
+        attempt.setAttemptKey(
+                attemptKey
+        );
+
+        attempt.setStatus(
+                "READY_REQUESTED"
+        );
+
+        attempt.setCreatedAt(
+                LocalDateTime.now()
+        );
+
+        paymentAttemptRepository
+                .saveAndFlush(
+                        attempt
+                );
+
+        request.setApprovalUrl(
+                approvalUrl
+                        + "&attemptKey="
+                        + attemptKey
+        );
+
+        try {
+
+            ReadyResponse response =
+                    restClient
+                            .post()
+                            .uri(
+                                    "/online/v1/payment/ready"
+                            )
+                            .header(
+                                    "Authorization",
+                                    "SECRET_KEY "
+                                            + secretKey
+                            )
+                            .contentType(
+                                    MediaType.APPLICATION_JSON
+                            )
+                            .body(
+                                    request
+                            )
+                            .retrieve()
+                            .body(
+                                    ReadyResponse.class
+                            );
+
+            if (response == null) {
+
+                attempt.setStatus(
+                        "READY_FAILED"
+                );
+
+                paymentAttemptRepository
+                        .save(
+                                attempt
+                        );
+
+                throw new RuntimeException(
+                        "결제 준비 응답이 없습니다."
+                );
+            }
+
+            attempt.setTid(
+                    response.getTid()
+            );
+
+            attempt.setNextRedirectPcUrl(
+                    response.getNextRedirectPcUrl()
+            );
+
+            attempt.setStatus(
+                    "READY"
+            );
+
+            paymentAttemptRepository
+                    .save(
+                            attempt
+                    );
+
+            paymentRepository
+                    .changeCreatedToReady(
+                            payment.getPaymentId()
+                    );
+
+            return response;
+
+        } catch (
+                ResponseStatusException e
+        ) {
+
+            throw e;
+
+        } catch (
+                Exception e
+        ) {
+
+            attempt.setStatus(
+                    "READY_FAILED"
+            );
+
+            paymentAttemptRepository
+                    .save(
+                            attempt
+                    );
+
+            throw e;
+        }
+    }
+
+    /*public ReadyResponse ready(
             ReadyRequest request
     ) {
 
@@ -314,7 +655,7 @@ public class PaymentService {
 
             throw e;
         }
-    }
+    }*/
 
     public ApproveResponse approve(
 

@@ -58,6 +58,20 @@ public class PaymentAttempt {
     )
     private LocalDateTime createdAt;
 
+    @Column(
+            name = "next_redirect_pc_url",
+            length = 1000
+    )
+    private String nextRedirectPcUrl;
+
+    public String getNextRedirectPcUrl() {
+        return nextRedirectPcUrl;
+    }
+
+    public void setNextRedirectPcUrl(String nextRedirectPcUrl) {
+        this.nextRedirectPcUrl = nextRedirectPcUrl;
+    }
+
     public Long getAttemptId() {
         return attemptId;
     }

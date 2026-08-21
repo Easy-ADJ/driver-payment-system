@@ -1,47 +1,98 @@
 package com.example.eazyadj.Dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class ReadyRequest {
 
-    private String cid;
-
-    @JsonProperty("partner_order_id")
-    private String partnerOrderId;
-
-    @JsonProperty("partner_user_id")
-    private String partnerUserId;
-
-    @JsonProperty("item_name")
-    private String itemName;
-
-    private Integer quantity;
+    @JsonProperty("driverId")
+    private Long driverId;
 
     @JsonProperty("total_amount")
     private Integer totalAmount;
 
-    @JsonProperty("tax_free_amount")
-    private Integer taxFreeAmount;
+    @JsonProperty("idempotencyKey")
+    private String idempotencyKey;
 
-    @JsonProperty("vat_amount")
-    private Integer vatAmount;
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
 
-    @JsonProperty("approval_url")
-    private String approvalUrl;
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
+    }
 
-    @JsonProperty("cancel_url")
-    private String cancelUrl;
-
-    @JsonProperty("fail_url")
-    private String failUrl;
+    private String cid;
 
     @JsonProperty(
-            value = "driverId",
-            access = JsonProperty.Access.WRITE_ONLY
+            value = "partner_order_id",
+            access = JsonProperty.Access.READ_ONLY
     )
-    private Long driverId;
+    private String partnerOrderId;
+
+    @JsonProperty(
+            value = "partner_user_id",
+            access = JsonProperty.Access.READ_ONLY
+    )
+    private String partnerUserId;
+
+    @JsonProperty(
+            value = "item_name",
+            access = JsonProperty.Access.READ_ONLY
+    )
+    private String itemName;
+
+    @JsonProperty(
+            value = "quantity",
+            access = JsonProperty.Access.READ_ONLY
+    )
+    private Integer quantity;
+
+    @JsonProperty(
+            value = "tax_free_amount",
+            access = JsonProperty.Access.READ_ONLY
+    )
+    private Integer taxFreeAmount;
+
+    @JsonProperty(
+            value = "vat_amount",
+            access = JsonProperty.Access.READ_ONLY
+    )
+    private Integer vatAmount;
+
+    @JsonProperty(
+            value = "approval_url",
+            access = JsonProperty.Access.READ_ONLY
+    )
+    private String approvalUrl;
+
+    @JsonProperty(
+            value = "cancel_url",
+            access = JsonProperty.Access.READ_ONLY
+    )
+    private String cancelUrl;
+
+    @JsonProperty(
+            value = "fail_url",
+            access = JsonProperty.Access.READ_ONLY
+    )
+    private String failUrl;
+
+
+    public Long getDriverId() {
+        return driverId;
+    }
+
+    public void setDriverId(Long driverId) {
+        this.driverId = driverId;
+    }
+
+    public Integer getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(Integer totalAmount) {
+        this.totalAmount = totalAmount;
+    }
 
     public String getCid() {
         return cid;
@@ -81,14 +132,6 @@ public class ReadyRequest {
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
-    }
-
-    public Integer getTotalAmount() {
-        return totalAmount;
-    }
-
-    public void setTotalAmount(Integer totalAmount) {
-        this.totalAmount = totalAmount;
     }
 
     public Integer getTaxFreeAmount() {
@@ -131,11 +174,4 @@ public class ReadyRequest {
         this.failUrl = failUrl;
     }
 
-    public Long getDriverId() {
-        return driverId;
-    }
-
-    public void setDriverId(Long driverId) {
-        this.driverId = driverId;
-    }
 }
